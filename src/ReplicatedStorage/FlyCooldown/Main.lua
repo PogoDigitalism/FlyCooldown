@@ -4,21 +4,25 @@ local Cooldown = {}
 Cooldown.__index = Cooldown
 
 type _player = number
-type unix = number
+type _callback = (player: Player, cooldown_time: number) -> ()
 
+type unix = number
 type on_cooldown = boolean
 type cooldown_applied = boolean
 
-function Cooldown.new(default_cooldown: number, callback: (player: Player, cooldown_time: number) -> ()?)
+function Cooldown.new(default_cooldown: number, callback: _callback?)
+	assert(
+		typeof(default_cooldown) == 'number',
+		"`default_cooldown` must be a number"
+	)	
+	assert(
+		typeof(callback) == 'function' or typeof(callback) == 'nil',
+		"`callback` must be a function or unfilled"
+	)
+
 	return setmetatable({
-		callback = assert(
-			typeof(callback) == 'function' or typeof(callback) == 'nil',
-			"`callback` must be a function or unfilled"
-		), -- PUBLIC | Can be set after instancing a Cooldown instance
-		default_cooldown = assert(
-			typeof(default_cooldown) == 'number',
-			"`default_cooldown` must be a number"
-		),
+		default_cooldown = default_cooldown, -- PUBLIC REQUIRED | Can be set after instancing a Cooldown instance
+		callback = callback, -- PUBLIC OPTIONAL | Can be set after instancing a Cooldown instance
 		
 		_cooldown_list = {} :: {[_player]: {
 				time_applied: unix,
@@ -69,16 +73,44 @@ function Cooldown.check(self: CLASS, player: Player): on_cooldown | nil
 	end
 end
 
+function Cooldown._delayCallback(self: CLASS, player: Player, cooldown_time: number): ()
+	task.wait(
+		cooldown_time
+	)
+	
+	if self.callback then -- !strict satisfyer
+		self.callback(
+			player, 
+			cooldown_time
+		)
+		self._callback_registry[player.UserId] = nil
+	end
+end
+
 function Cooldown.apply(self: CLASS, player: Player, cooldown_time: number?): ()
 	self._cooldown_list[player.UserId] = {
 		["time_applied"] = DateTime.now().UnixTimestampMillis,
 		["cooldown_time"] = cooldown_time or self.default_cooldown
 	}
+	
+	if self.callback then
+		local Thread = coroutine.create(
+			self._delayCallback
+		)
+		self._callback_registry[player.UserId] = Thread
+		
+		coroutine.resume(
+			Thread, 
+			self, player, cooldown_time
+		)
+	end
 end
 
 function Cooldown.checkAndApply(self: CLASS, player: Player, cooldown_time: number?): cooldown_applied
 	if self:check(player) then
-		self:apply(player, cooldown_time)
+		self:apply(player, 
+			cooldown_time
+		)
 
 		return true
 	else
@@ -86,25 +118,33 @@ function Cooldown.checkAndApply(self: CLASS, player: Player, cooldown_time: numb
 	end
 end
 
-function Cooldown.cancelCallback(self: CLASS, player: Player)
+function Cooldown.cancelCallback(self: CLASS, player: Player): ()
 	local Thread = self._callback_registry[player.UserId]
 	if Thread then
-		coroutine.close(Thread)
+		coroutine.close(
+			Thread
+		)
 		self._callback_registry[player.UserId] = nil
 	end	
 end
 
-function Cooldown.clear(self: CLASS, player: Player)
+function Cooldown.clear(self: CLASS, player: Player): ()
 	self._cooldown_list[player.UserId] = nil
 
-	self:cancelCallback(player)
+	self:cancelCallback(
+		player
+	)
 end
 
-function Cooldown.globalClear(self: CLASS)
-	table.clear(self._cooldown_list)
+function Cooldown.globalClear(self: CLASS): ()
+	table.clear(
+		self._cooldown_list
+	)
 	
 	for id, Thread in self._callback_registry do
-		coroutine.close(Thread)
+		coroutine.close(
+			Thread
+		)
 	end
 end
 
