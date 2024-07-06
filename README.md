@@ -34,3 +34,17 @@ RenderDrone.OnServerEvent:Connect(function(player: Player, drone_name: string)
 	cooldown:apply(player, equip_cooldown)
 end)
 ```
+
+Attributes;
+`default_cooldown: uses this a default cooldown if none is specified`
+`callback: set a callback to be called when a cooldown finishes`
+
+
+Methods;
+</b>
+`setEntry: insert or set a player cooldown yourself`
+`check: check if a cooldown is finished`
+`apply: apply a cooldown to a user`
+`cancelCallback: cancel a callback for a player`
+`clear: clear a player's cooldown information from the cooldown class`
+`globalClear: clear all existing cooldown data from all registered players`
