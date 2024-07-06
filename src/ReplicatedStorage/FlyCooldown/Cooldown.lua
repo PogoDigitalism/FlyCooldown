@@ -60,7 +60,7 @@ function Cooldown.check(self: CLASS, player: Player): on_cooldown | nil
 		'`player` must be a Player'
 	)
 	
-	local _current = DateTime.now().UnixTimestampMillis
+	local _current = DateTime.now().UnixTimestampMillis/1000
 	local _cooldown_info = self._cooldown_list[player.UserId]
 	if _cooldown_info then
 		if _current - _cooldown_info.time_applied < _cooldown_info.cooldown_time then
@@ -89,7 +89,7 @@ end
 
 function Cooldown.apply(self: CLASS, player: Player, cooldown_time: number?): ()
 	self._cooldown_list[player.UserId] = {
-		["time_applied"] = DateTime.now().UnixTimestampMillis,
+		["time_applied"] = DateTime.now().UnixTimestampMillis/1000,
 		["cooldown_time"] = cooldown_time or self.default_cooldown
 	}
 	
