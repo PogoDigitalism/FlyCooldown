@@ -14,23 +14,23 @@ cooldown.callback = function(player, cooldown_time)
 end
 
 RenderDrone.OnServerEvent:Connect(function(player: Player, drone_name: string)
-		local cooldown_finished = cooldown:check(player)
-		if not cooldown_finished then
-			return
-		end
-		
-		local player_data = PlayerDataService.GetPlayerDataInstance(player)
-		local owns_drone = player_data:HasGear(drone_name)
-		if owns_drone then
-			for _, p:Player in players:GetPlayers() do
-				if p.UserId ~= player.UserId then
-					RenderDrone:FireClient(p, player, drone_name)
-				end
+	local cooldown_finished = cooldown:check(player)
+	if not cooldown_finished then
+		return
+	end
+	
+	local player_data = PlayerDataService.GetPlayerDataInstance(player)
+	local owns_drone = player_data:HasGear(drone_name)
+	if owns_drone then
+		for _, p:Player in players:GetPlayers() do
+			if p.UserId ~= player.UserId then
+				RenderDrone:FireClient(p, player, drone_name)
 			end
-		else
-			DeleteDrone:FireClient(player)
 		end
-
-		cooldown:apply(player, equip_cooldown)
+	else
+		DeleteDrone:FireClient(player)
+	end
+	
+	cooldown:apply(player, equip_cooldown)
 end)
 ```
