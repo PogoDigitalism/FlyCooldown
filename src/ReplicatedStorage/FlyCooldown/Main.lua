@@ -13,13 +13,12 @@ function Cooldown.new(callback: (player: Player, cooldown_time: number) -> ()?)
 			typeof(callback) == 'function' or typeof(callback) == nil,
 			"`callback` must be a function"
 		), -- PUBLIC | Can be set after instancing a Cooldown instance
+
 		_cooldown_list = {} :: {[_player]: {
 				time_applied: _unix,
 				cooldown_time: number,
 			}
 		},
-		
-		
 	}, Cooldown)
 end
 export type CLASS = typeof(Cooldown.new(...))
