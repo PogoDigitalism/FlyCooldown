@@ -142,6 +142,19 @@ function Cooldown.clear(self: cls, player: Player): ()
 	)
 end
 
+function Cooldown.destroy(self: {}) -- strict satisfyer
+	table.clear(
+		self
+	)
+	setmetatable(
+		self,
+		nil
+	)
+	table.freeze(
+		self
+	)
+end
+
 function Cooldown.globalClear(self: cls): ()
 	table.clear(
 		self._cooldown_list
